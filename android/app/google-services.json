@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "725592639102",
+    "firebase_url": "https://findmyfriend-71226-default-rtdb.firebaseio.com",
+    "project_id": "findmyfriend-71226",
+    "storage_bucket": "findmyfriend-71226.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725592639102:android:30b3bde01335eb78533a2f",
+        "android_client_info": {
+          "package_name": "com.example.findmyfriend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAslAC_5YO1tJw0V8PiOZl4cWGWD2bdik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725592639102:android:4f1b2f6d48e0b1c4533a2f",
+        "android_client_info": {
+          "package_name": "com.flutterflow.fluttermet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAslAC_5YO1tJw0V8PiOZl4cWGWD2bdik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
