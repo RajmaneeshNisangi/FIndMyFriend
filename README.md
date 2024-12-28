@@ -6,12 +6,12 @@ this project is used to find the location of another user
 ## Getting Started
 build gradle configurations
 in Android>app>settings.gradle
-<!-- plugins {
+plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
     id "com.android.application" version "8.2.1" apply false
     id "com.google.gms.google-services" version "4.3.15" apply false
     id "org.jetbrains.kotlin.android" version "1.8.22" apply false
-} -->
+} 
 change the current versions to the above mentioned versions 
 
 Firebase configuration
