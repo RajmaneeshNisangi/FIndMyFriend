@@ -34,3 +34,4 @@ Has we are not authenticating the users , the location is hard coded.
 in debug console it can be seen that the location data is been succefully loaded into the firebase and is fetched from the firebase.
  
 
+"# FIndMyFriend" 
