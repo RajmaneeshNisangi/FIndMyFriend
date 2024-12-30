@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
-
 import 'package:findmyfriend/models/location.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -29,8 +28,9 @@ class _LocationInputState extends State<LocationInput> {
     final lat = _pickedLocation!.latitude;
     final lng = _pickedLocation!.longitude;
 
-    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=16&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:A%7C$lat,$lng&key=AIzaSyATlaGdu5YMbJHiF6hx5pq280UTUUe0ICc';
+    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=16&size=600x300&maptype=roadmap&markers=color:red%7Clabel:A%7C$lat,$lng&key=AIzaSyATlaGdu5YMbJHiF6hx5pq280UTUUe0ICc';
   }
+
   String get locationImage2 {
     if (fetchedLocation == null) {
       return '';
@@ -38,7 +38,7 @@ class _LocationInputState extends State<LocationInput> {
     final lat = fetchedLocation!.latitude;
     final lng = fetchedLocation!.longitude;
 
-    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=16&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:A%7C$lat,$lng&key=AIzaSyATlaGdu5YMbJHiF6hx5pq280UTUUe0ICc';
+    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=16&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:B%7C$lat,$lng&key=AIzaSyATlaGdu5YMbJHiF6hx5pq280UTUUe0ICc';
   }
 
   void _getCurrentLocation() async {
@@ -52,7 +52,7 @@ class _LocationInputState extends State<LocationInput> {
     if (!serviceEnabled) {
       serviceEnabled = await location.requestService();
       if (!serviceEnabled) {
-          print('Location services are disabled.');
+        print('Location services are disabled.');
         return;
       }
     }
@@ -61,10 +61,11 @@ class _LocationInputState extends State<LocationInput> {
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
       if (permissionGranted != PermissionStatus.granted) {
-         print('Location permission not granted.');
+        print('Location permission not granted.');
         return;
       }
     }
+
     setState(() {
       _isGettingLocation = true;
     });
@@ -76,68 +77,66 @@ class _LocationInputState extends State<LocationInput> {
 
     if (lat == null || lng == null) {
       setState(() {
-        
-          _isGettingLocation = false;
-        });
-        return;
-    };
+        _isGettingLocation = false;
+      });
+      return;
+    }
+
     final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=37.4219983,-122.084&key=AIzaSyATlaGdu5YMbJHiF6hx5pq280UTUUe0ICc');
-      try{
-    final response = await http.get(url);
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=AIzaSyATlaGdu5YMbJHiF6hx5pq280UTUUe0ICc');
 
-    if (response.statusCode == 200) {
-      final resdata = jsonDecode(response.body);
+    try {
+      final response = await http.get(url);
 
-      if(resdata['results'] != null && resdata['results'].isNotEmpty){
-      final address = resdata['results'][0]['formatted_address'];
+      if (response.statusCode == 200) {
+        final resdata = jsonDecode(response.body);
 
-      setState(() {
-        _pickedLocation = PlaceLocation(
-          latitude: lat,
-          longitude: lng,
-          address: address,
-        );
-        _isGettingLocation = false;
-      });
+        if (resdata['results'] != null && resdata['results'].isNotEmpty) {
+          final address = resdata['results'][0]['formatted_address'];
 
-      widget.onSelectLocation(_pickedLocation!);
-       print('Picked location: $_pickedLocation');
-       _sendLocationToFirebase(_pickedLocation!);
-       
+          setState(() {
+            _pickedLocation = PlaceLocation(
+              latitude: lat,
+              longitude: lng,
+              address: address,
+            );
+            _isGettingLocation = false;
+          });
 
-        
-    } else {
-      print('No results found in API response.');
-       setState(() {
+          widget.onSelectLocation(_pickedLocation!);
+          print('Picked location: $_pickedLocation');
+          _sendLocationToFirebase(_pickedLocation!);
+        } else {
+          print('No results found in API response.');
+          setState(() {
+            _isGettingLocation = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No address found for the location.')),
+          );
+        }
+      } else {
+        print('HTTP Error: ${response.statusCode}');
+        setState(() {
           _isGettingLocation = false;
         });
-       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No address found for the location.')),
-        );
-    }
-  }else {
-      // Handle HTTP error
-       print('HTTP Error: ${response.statusCode}');
+        throw Exception('Failed to fetch location data: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error occurred: $error');
       setState(() {
         _isGettingLocation = false;
       });
-      throw Exception('Failed to fetch location data: ${response.statusCode}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $error')),
+      );
     }
-  } catch (error) {
-     print('Error occurred: $error');
-    setState(() {
-      _isGettingLocation = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('An error occurred: $error')),
-    );
   }
-}
-void _sendLocationToFirebase(PlaceLocation location) async {
+
+  void _sendLocationToFirebase(PlaceLocation location) async {
     try {
       final databaseReference = FirebaseDatabase.instance.ref();
-      final userId = 'user_id';
+      final userId = 'user_id'; 
 
       final locationRef = databaseReference.child('users/$userId/latest_location');
       await locationRef.set({
@@ -152,7 +151,38 @@ void _sendLocationToFirebase(PlaceLocation location) async {
       print('Error sending location to Firebase: $error');
     }
   }
-  
+
+  // Fetch location from Firebase
+  void _fetchLocationFromFirebase() async {
+    try {
+      final databaseReference = FirebaseDatabase.instance.ref();
+      final userId = 'user'; 
+
+      final locationRef = databaseReference.child('users/$userId/location');
+
+      final snapshot = await locationRef.get();
+
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        final fetchedLocation = PlaceLocation(
+          latitude: data['latitude'],
+          longitude: data['longitude'],
+          address: data['address'],
+        );
+
+        setState(() {
+          this.fetchedLocation = fetchedLocation; 
+        });
+
+        print('Location fetched from Firebase');
+        print('Fetched Location: $fetchedLocation');
+      } else {
+        print('No location data found for user.');
+      }
+    } catch (error) {
+      print('Error fetching location from Firebase: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,48 +193,30 @@ void _sendLocationToFirebase(PlaceLocation location) async {
             color: Theme.of(context).colorScheme.onSurface,
           ),
     );
-  void _fetchLocationFromFirebase() async {
-  try {
-    final databaseReference = FirebaseDatabase.instance.ref();
-    final userId = 'user'; 
-
-    final locationRef = databaseReference.child('users/$userId/location');
-
-    final snapshot = await locationRef.get();
-
-    if (snapshot.exists) {
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      final PlaceLocation fetchedLocation = PlaceLocation(
-        latitude: data['latitude'],
-        longitude: data['longitude'],
-        address: data['address'],
-      );
-
-
-       print('Location fetched from firebase');
-      print('Fetched Location: $fetchedLocation');
-    } else {
-      print('No location data found for user.');
-    }
-  } catch (error) {
-    print('Error fetching location from Firebase: $error');
-  }
-}
 
     if (_pickedLocation != null) {
-      previewContent = Image.network(
-        locationImage,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
+      previewContent = Column(
+        children: [
+          Image.network(
+            locationImage,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 150,
+          ),
+          
+        ],
       );
-
-      Text(
-        'Latitude: ${_pickedLocation!.latitude}, Longitude: ${_pickedLocation!.longitude}',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+    } else if (fetchedLocation != null) {
+      previewContent = Column(
+        children: [
+          Image.network(
+            locationImage2,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 150,
+          ),
+          
+        ],
       );
     }
 
@@ -219,23 +231,24 @@ void _sendLocationToFirebase(PlaceLocation location) async {
           height: 170,
           width: double.infinity,
           decoration: BoxDecoration(
-              border: Border.all(
-            width: 1,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-          )),
+            border: Border.all(
+              width: 1,
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            ),
+          ),
           child: previewContent,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             TextButton.icon(
-              icon: const Icon(Icons.location_on,size: 25,),
-              label: const Text('Get User A Location',),
+              icon: const Icon(Icons.location_on, size: 25),
+              label: const Text('Get User A Location'),
               onPressed: _getCurrentLocation,
             ),
             TextButton.icon(
-              icon: const Icon(Icons.add_location_alt,size: 25,),
-              label: const Text('Get User B Location '),
+              icon: const Icon(Icons.add_location_alt, size: 25),
+              label: const Text('Get User B Location'),
               onPressed: _fetchLocationFromFirebase,
             ),
           ],
